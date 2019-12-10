@@ -2,13 +2,17 @@ from keras.applications.resnet50 import ResNet50, preprocess_input, decode_predi
 from keras.preprocessing import image
 from keras.models import Sequential
 from keras.layers import GlobalAveragePooling2D, Dense
-import cv2
 import numpy as np
-from .constants import DOG_NAMES           
+from .constants import DOG_NAMES
+from cv2 import CascadeClassifier, imread, cvtColor, COLOR_BGR2GRAY
+from keras import backend as K
+import base64
+import os
 
 class DogClassifier():
 
     def __init__(self, image_path):
+        K.clear_session()
         self.image_path = image_path
         self.ResNet50_model = ResNet50(weights='imagenet')
 
@@ -20,7 +24,11 @@ class DogClassifier():
             self.ResNet50_model.add(Dense(133, activation='softmax'))
             print(self.ResNet50_model.summary())
             self.ResNet50_model.load_weights('dogclassifier/saved_models/weights.best.Resnet50.hdf5')
-            return ['dog', self.Resnet50_predict_breed().split('.')[-1]]
+            predicted_dog = self.Resnet50_predict_breed().split('/')[-1]
+            dog_pic_path = os.path.join('/home/shubh1795/valid/', predicted_dog, os.listdir(os.path.join('/home/shubh1795/valid/',predicted_dog))[0])
+            with open(dog_pic_path, "rb") as image_file:
+                encoded_string = base64.b64encode(image_file.read())
+            return ['dog', predicted_dog.split('.')[-1], encoded_string]
         elif self.face_detector():
             print("Human face is detected")
             self.ResNet50_model = Sequential()
@@ -28,7 +36,11 @@ class DogClassifier():
             self.ResNet50_model.add(Dense(133, activation='softmax'))
             print(self.ResNet50_model.summary())
             self.ResNet50_model.load_weights('dogclassifier/saved_models/weights.best.Resnet50.hdf5')
-            return ['human', self.Resnet50_predict_breed().split('.')[-1]]
+            predicted_dog = self.Resnet50_predict_breed().split('/')[-1]
+            dog_pic_path = os.path.join('/home/shubh1795/valid/', predicted_dog, os.listdir(os.path.join('/home/shubh1795/valid/',predicted_dog))[0])
+            with open(dog_pic_path, "rb") as image_file:
+                encoded_string = base64.b64encode(image_file.read())
+            return ['human', predicted_dog.split('.')[-1], encoded_string]
         else:
             raise ValueError("Dog or Face not detected")
 
@@ -51,9 +63,9 @@ class DogClassifier():
         return ((prediction <= 268) & (prediction >= 151))
 
     def face_detector(self):
-        face_cascade = cv2.CascadeClassifier('dogclassifier/haarcascades/haarcascade_frontalface_alt.xml')
-        img = cv2.imread(self.image_path)
-        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        face_cascade = CascadeClassifier('dogclassifier/haarcascades/haarcascade_frontalface_alt.xml')
+        img = imread(self.image_path)
+        gray = cvtColor(img, COLOR_BGR2GRAY)
         faces = face_cascade.detectMultiScale(gray)
         return len(faces) > 0
 
