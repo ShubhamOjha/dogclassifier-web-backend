@@ -121,7 +121,7 @@ numexpr==2.7.0
 numpy==1.17.4
 numpydoc==0.9.1
 olefile==0.46
-opencv-python==4.1.2.30
+opencv-python==4.2.0.32
 openpyxl==3.0.0
 opt-einsum==0+untagged.49.gdbede45.dirty
 packaging==19.2
